@@ -1,20 +1,21 @@
 import java.util.*;
 import java.lang.*;
-import java.io.*;
 
-class Main {
-    static int x,k;
+public class Main {
+
     static class Node{
-        long data;
-        int number;
-        boolean flag = false;
-        Node parent = null;
+        char data;
         ArrayList<Node> arrayList;
+        HashMap<Character, Integer> map;
+        HashMap<Character, Integer> pos;
+        int count;
 
-        Node(int number,long data) {
-            this.number = number;
+        Node(char data,int count) {
             this.data = data;
             this.arrayList = new ArrayList<>();
+            this.map = new HashMap<>();
+            this.pos = new HashMap<>();
+            this.count = count;
         }
     }
 
@@ -30,88 +31,88 @@ class Main {
                 postOrder(i);
             }
 
-            if(node.parent != null){
-                node.parent.data = node.parent.data + node.data; //Add child data to parent
-                if(node.data < -x){
-                    node.parent.data = node.parent.data - node.data; //Subtract child's data from parent
-                    node.parent.flag=true; //Parent's child is removed
-                }
-            }
-
-        }
-
-        Node pt;
-        void preOrder(Node node){
-            if(node.parent != null){
-                if(node.data < 0 && node.flag ){
-                    pt=node.parent;
-                    do{
-                        pt.data = pt.data - node.data;
-                        k++;
-                        pt=pt.parent;
-                    }while (pt != null);
-                    return;
-                }
-            }else{
-                if(node.data < 0 && node.flag ){
-                    node.data=0;
-                    k++;
-                    return;
-                }
-            }
-
-            for(Node i : node.arrayList){ //Iterate over children
-                preOrder(i);
-            }
+            System.out.println("Item = "+node.data+"  Count = "+node.count);
         }
     }
 
-    public static void main (String[] args) throws java.lang.Exception {
+    public static void main (String[] args){
 
         Scanner sc = new Scanner(System.in);
-        int t;
-        t = sc.nextInt();
+        int n;
 
-        while (t != 0) {
-            int n,i;
-            n = sc.nextInt(); //Input number of nodes
-            x = sc.nextInt(); //Input X
-            k=0;
+        n = sc.nextInt();
 
-            int[] dataArray = new int[n]; //Array stores value of nodes
-            for(i=0;i<n;i++) dataArray[i] = sc.nextInt();
+        ArrayList<StringBuilder> itemArrayList = new ArrayList<>();
 
-            int[][] edgesArray = new int[n-1][2]; //Array stores edges
-            for(i=0;i<n-1;i++){
-                edgesArray[i][0] = sc.nextInt();
-                edgesArray[i][1] = sc.nextInt();
-            }
+        int i,j,k;
+        int[] itemCount =new int[10];
 
-            ArrayList<Node> nodeArrayList = new ArrayList<>(); //List stores nodes
-            for(i=0;i<n;i++) nodeArrayList.add(new Node(i,dataArray[i]));
-
-
-            for(i=0;i<n-1;i++){ //Link child and parent
-                nodeArrayList.get(edgesArray[i][0] - 1).arrayList.add(nodeArrayList.get(edgesArray[i][1] - 1));
-                nodeArrayList.get(edgesArray[i][1] - 1).parent=nodeArrayList.get(edgesArray[i][0] - 1);
-            }
-
-            GenTree genTree = new GenTree(nodeArrayList.get(0)); //Set root node
-
-            genTree.postOrder(genTree.root); //Bottom-up check and remove nodes
-
-            if(n==1){
-                if(genTree.root.data < -x){
-                    k++;
-                    genTree.root.data=0;
-                }
-            }else{
-                genTree.preOrder(genTree.root);
-            }
-
-            System.out.println(genTree.root.data - (x * k));
-
-            t--;
+        for(i=0;i<n;i++){
+            itemArrayList.add(new StringBuilder(sc.next()));
         }
+
+        System.out.println("\nSize of List = " +itemArrayList.size()+"\n");
+
+        for(i=0;i<n;i++){
+            System.out.println("Item "+(i+1)+" = "+itemArrayList.get(i));
+        }
+
+        for(i=0;i<n;i++){
+            for(j=0;j<itemArrayList.get(i).length();j++){
+                itemCount[Character.getNumericValue(itemArrayList.get(i).charAt(j))]++;
+            }
+        }
+
+        System.out.println();
+
+        for(i=0;i<10;i++){
+            System.out.println("Count of "+i+" = "+itemCount[i]);
+        }
+
+        System.out.println();
+
+        for(k=0;k<n;k++){
+            for (i = 0; i < itemArrayList.get(k).length()-1; i++){
+                for (j = 0; j < itemArrayList.get(k).length()-i-1; j++){
+                    if (itemCount[Character.getNumericValue(itemArrayList.get(k).charAt(j))] < itemCount[Character.getNumericValue(itemArrayList.get(k).charAt(j+1))])
+                    {
+                        char temp = itemArrayList.get(k).charAt(j);
+                        itemArrayList.get(k).setCharAt(j, itemArrayList.get(k).charAt(j+1));
+                        itemArrayList.get(k).setCharAt(j+1, temp);
+                    }
+                }
+            }
+        }
+
+        for(i=0;i<n;i++){
+            System.out.println("New Item "+(i+1)+" = "+itemArrayList.get(i));
+        }
+
+        System.out.println();
+
+        GenTree genTree=new GenTree(new Node('0',1));
+
+        Node pt;
+        for(i=0;i<n;i++){
+            pt=genTree.root;
+            for(j=0;j<itemArrayList.get(i).length();j++){
+                if(pt.map.containsKey(itemArrayList.get(i).charAt(j))){
+                    pt=pt.arrayList.get(pt.pos.get(itemArrayList.get(i).charAt(j)));
+                    pt.count=pt.count+1;
+                    System.out.println("Already Present  "+pt.data+"  Count = "+pt.count);
+                }else{
+                    pt.arrayList.add(new Node(itemArrayList.get(i).charAt(j),1));
+                    pt.pos.put(itemArrayList.get(i).charAt(j),pt.arrayList.size()-1);
+                    pt.map.put(itemArrayList.get(i).charAt(j),1);
+                    pt=pt.arrayList.get(pt.arrayList.size()-1);
+                    System.out.println("Adding new node  "+pt.data+"  Count = "+pt.count);
+                }
+            }
+        }
+
+        System.out.println("\n## Post Order Tree Traversal ##\n");
+
+        genTree.postOrder(genTree.root);
     }
 }
+
